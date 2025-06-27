@@ -21,40 +21,61 @@ runs:
         yq --version
       shell: bash
 
-    - name: Show config_file content
-      run: |
-        echo "===== config_file (${{ inputs.config_file }}) content ====="
-        cat "${{ inputs.config_file }}"
-      shell: bash
 
-
-    - name: Read YAML file and set outputs for each field
+    - name: Recursively flatten YAML and set outputs
       id: read_yaml
+      shell: bash
       run: |
         CONFIG_FILE="${{ inputs.config_file }}"
 
-        # keysをJSON形式で取得してjqで配列展開
-        keys=$(yq e -o=json 'keys' "$CONFIG_FILE")
+        flatten() {
+          local prefix=$1
+          local path=$2
+          local keys=$(yq e "$path | keys" "$CONFIG_FILE" | sed 's/- //g')
 
-        for key in $(echo "$keys" | jq -r '.[]'); do
-          value=$(yq e ".$key" "$CONFIG_FILE")
+          for key in $keys; do
+            local full_key="${prefix}${key}"
+            local sub_path="${path}.${key}"
+            local type=$(yq e "type($sub_path)" "$CONFIG_FILE")
+
+            if [ "$type" = "!!map" ]; then
+              flatten "${full_key}__" "$sub_path"
+            else
+              local val=$(yq e "$sub_path" "$CONFIG_FILE")
+              echo "${full_key}=${val}" >> "$GITHUB_OUTPUT"
+            fi
+          done
+        }
+
+        flatten "" "."
+
+    # - name: Read YAML file and set outputs for each field
+    #   id: read_yaml
+    #   run: |
+    #     CONFIG_FILE="${{ inputs.config_file }}"
+
+    #     # keysをJSON形式で取得してjqで配列展開
+    #     keys=$(yq e -o=json 'keys' "$CONFIG_FILE")
+
+    #     for key in $(echo "$keys" | jq -r '.[]'); do
+    #       value=$(yq e ".$key" "$CONFIG_FILE")
           
-          # JSONか判定するためにvalueをJSONで取得
-          value_json=$(yq e -o=json ".$key" "$CONFIG_FILE")
+    #       # JSONか判定するためにvalueをJSONで取得
+    #       value_json=$(yq e -o=json ".$key" "$CONFIG_FILE")
 
-          if [[ $(echo "$value_json" | jq 'type') == '"object"' ]]; then
-            subkeys=$(echo "$value_json" | jq -r 'keys | .[]')
-            for subkey in $subkeys; do
-              subvalue=$(echo "$value_json" | jq -r ".$subkey")
-              output_name="${key}_${subkey}"
-              echo "${output_name}=${subvalue}" >> $GITHUB_OUTPUT
-            done
-            echo "${key}=$(echo "$value_json" | jq -c '.')" >> $GITHUB_OUTPUT
-          else
-            echo "${key}=${value}" >> $GITHUB_OUTPUT
-          fi
-        done
-      shell: bash
+    #       if [[ $(echo "$value_json" | jq 'type') == '"object"' ]]; then
+    #         subkeys=$(echo "$value_json" | jq -r 'keys | .[]')
+    #         for subkey in $subkeys; do
+    #           subvalue=$(echo "$value_json" | jq -r ".$subkey")
+    #           output_name="${key}_${subkey}"
+    #           echo "${output_name}=${subvalue}" >> $GITHUB_OUTPUT
+    #         done
+    #         echo "${key}=$(echo "$value_json" | jq -c '.')" >> $GITHUB_OUTPUT
+    #       else
+    #         echo "${key}=${value}" >> $GITHUB_OUTPUT
+    #       fi
+    #     done
+    #   shell: bash
 
     - name: Show Output
       run: |
