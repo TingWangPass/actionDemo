@@ -1,0 +1,60 @@
+name: Load Config Action
+
+description: Reads a YAML config file and outputs its contents, including secrets from AWS Secrets Manager.
+
+inputs:
+  config_file:
+    description: 'Path to the YAML configuration file'
+    required: true
+
+outputs:
+  github_output:
+    description: 'The output to be used by subsequent steps'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      run: |
+        # AWS CLI、jq、yqをインストール
+        sudo apt-get update
+        sudo apt-get install -y jq yq
+
+    - name: Read YAML file and set outputs for each field
+      id: read_yaml
+      run: |
+        CONFIG_FILE="${{ inputs.config_file }}"
+
+        # config_file からすべてのトップレベルキーを取得
+        keys=$(yq e 'keys' $CONFIG_FILE)
+
+        # 各キーをGitHub Actionsの出力として設定
+        for key in $(echo "$keys" | jq -r '.[]'); do
+          value=$(yq e ".$key" $CONFIG_FILE)
+
+          # 対象キーがネストされている場合（例えば test1, test2）
+          if [[ $(echo "$value" | jq 'type') == '"object"' ]]; then
+            subkeys=$(echo "$value" | jq -r 'keys | .[]')
+            for subkey in $subkeys; do
+              subvalue=$(echo "$value" | jq -r ".$subkey")
+              # アンダースコア形式で出力
+              output_name="${key}_${subkey}"
+              echo "::set-output name=${output_name}::$subvalue"  # 出力をアンダースコアで設定
+            done
+            # test1 全体を文字列として出力 (文字列化)
+            echo "::set-output name=${key}::$(echo $value | jq -c '.')"
+          else
+            echo "::set-output name=$key::$value"  # 通常のキーを設定
+          fi
+        done
+
+    - name: Show Output
+      run: |
+        # GitHub Actionsの出力を表示
+        echo "Outputs:"
+        echo "dynamoDB: ${{ steps.read_yaml.outputs.dynamoDB }}"
+        echo "test1_user: ${{ steps.read_yaml.outputs.test1_user }}"  # アンダースコア形式で表示
+        echo "test1_password: ${{ steps.read_yaml.outputs.test1_password }}"  # アンダースコア形式で表示
+        echo "test1: ${{ steps.read_yaml.outputs.test1 }}"  # test1 オブジェクト全体を表示
+        echo "test2_user: ${{ steps.read_yaml.outputs.test2_user }}"  # アンダースコア形式で表示
+        echo "test2_password: ${{ steps.read_yaml.outputs.test2_password }}"  # アンダースコア形式で表示
