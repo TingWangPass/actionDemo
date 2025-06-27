@@ -21,6 +21,12 @@ runs:
         sudo apt-get install -y jq yq
       shell: bash
 
+    - name: Show config_file content
+      run: |
+        echo "===== config_file (${ { inputs.config_file }} ) content ====="
+        cat "${{ inputs.config_file }}"
+      shell: bash
+
     - name: Read YAML file and set outputs for each field
       id: read_yaml
       run: |
