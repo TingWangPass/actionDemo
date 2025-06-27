@@ -16,10 +16,13 @@ runs:
   steps:
     - name: Install dependencies
       run: |
-        # AWS CLI、jq、yqをインストール
-        sudo apt-get update
-        sudo apt-get install -y jq yq
+        sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+        sudo chmod +x /usr/local/bin/yq
+        yq --version
       shell: bash
+
+    # - name: Check yq version
+    #   run: yq --version
 
     - name: Show config_file content
       run: |
@@ -55,6 +58,35 @@ runs:
           fi
         done
       shell: bash
+
+    # - name: Read YAML file and set outputs for each field
+    #   id: read_yaml
+    #   run: |
+    #     CONFIG_FILE="${{ inputs.config_file }}"
+
+    #     # config_file からすべてのトップレベルキーを取得
+    #     keys=$(yq e 'keys' $CONFIG_FILE)
+
+    #     # 各キーをGitHub Actionsの出力として設定
+    #     for key in $(echo "$keys" | jq -r '.[]'); do
+    #       value=$(yq e ".$key" $CONFIG_FILE)
+
+    #       # 対象キーがネストされている場合（例えば test1, test2）
+    #       if [[ $(echo "$value" | jq 'type') == '"object"' ]]; then
+    #         subkeys=$(echo "$value" | jq -r 'keys | .[]')
+    #         for subkey in $subkeys; do
+    #           subvalue=$(echo "$value" | jq -r ".$subkey")
+    #           # アンダースコア形式で出力
+    #           output_name="${key}_${subkey}"
+    #           echo "::set-output name=${output_name}::$subvalue"  # 出力をアンダースコアで設定
+    #         done
+    #         # test1 全体を文字列として出力 (文字列化)
+    #         echo "::set-output name=${key}::$(echo $value | jq -c '.')"
+    #       else
+    #         echo "::set-output name=$key::$value"  # 通常のキーを設定
+    #       fi
+    #     done
+    #   shell: bash
 
     - name: Show Output
       run: |
