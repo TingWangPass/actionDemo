@@ -1,0 +1,23 @@
+- name: Get AWS Secrets Manager values
+  id: get_secrets
+  inputs:
+    config_file:
+      description: 'Path to the YAML configuration file'
+      required: true
+
+  outputs:
+    github_output:
+      description: 'The output to be used by subsequent steps'
+
+  runs:
+    using: 'composite'
+    secrets_json='${{ steps.read_secrets.outputs.secrets }}'
+
+    echo "$secrets_json" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key secret_id; do
+      secret_value=$(aws secretsmanager get-secret-value \
+        --secret-id "$secret_id" \
+        --query SecretString \
+        --output text)
+
+      echo "$key=$secret_value" >> "$GITHUB_OUTPUT"
+    done
