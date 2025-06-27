@@ -19,6 +19,7 @@ runs:
         # AWS CLI、jq、yqをインストール
         sudo apt-get update
         sudo apt-get install -y jq yq
+      shell: bash
 
     - name: Read YAML file and set outputs for each field
       id: read_yaml
@@ -47,6 +48,7 @@ runs:
             echo "::set-output name=$key::$value"  # 通常のキーを設定
           fi
         done
+      shell: bash
 
     - name: Show Output
       run: |
@@ -58,3 +60,4 @@ runs:
         echo "test1: ${{ steps.read_yaml.outputs.test1 }}"  # test1 オブジェクト全体を表示
         echo "test2_user: ${{ steps.read_yaml.outputs.test2_user }}"  # アンダースコア形式で表示
         echo "test2_password: ${{ steps.read_yaml.outputs.test2_password }}"  # アンダースコア形式で表示
+      shell: bash
