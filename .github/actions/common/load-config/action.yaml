@@ -23,7 +23,7 @@ runs:
 
     - name: Show config_file content
       run: |
-        echo "===== config_file (${ { inputs.config_file }} ) content ====="
+        echo "===== config_file (${{ inputs.config_file }}) content ====="
         cat "${{ inputs.config_file }}"
       shell: bash
 
