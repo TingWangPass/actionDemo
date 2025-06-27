@@ -35,26 +35,25 @@ runs:
       run: |
         CONFIG_FILE="${{ inputs.config_file }}"
 
-        # config_file からすべてのトップレベルキーを取得
-        keys=$(yq e 'keys' $CONFIG_FILE)
+        # keysをJSON形式で取得してjqで配列展開
+        keys=$(yq e -o=json 'keys' "$CONFIG_FILE")
 
-        # 各キーをGitHub Actionsの出力として設定
         for key in $(echo "$keys" | jq -r '.[]'); do
-          value=$(yq e ".$key" $CONFIG_FILE)
+          value=$(yq e ".$key" "$CONFIG_FILE")
+          
+          # JSONか判定するためにvalueをJSONで取得
+          value_json=$(yq e -o=json ".$key" "$CONFIG_FILE")
 
-          # 対象キーがネストされている場合（例えば test1, test2）
-          if [[ $(echo "$value" | jq 'type') == '"object"' ]]; then
-            subkeys=$(echo "$value" | jq -r 'keys | .[]')
+          if [[ $(echo "$value_json" | jq 'type') == '"object"' ]]; then
+            subkeys=$(echo "$value_json" | jq -r 'keys | .[]')
             for subkey in $subkeys; do
-              subvalue=$(echo "$value" | jq -r ".$subkey")
-              # アンダースコア形式で出力
+              subvalue=$(echo "$value_json" | jq -r ".$subkey")
               output_name="${key}_${subkey}"
-              echo "::set-output name=${output_name}::$subvalue"  # 出力をアンダースコアで設定
+              echo "::set-output name=${output_name}::$subvalue"
             done
-            # test1 全体を文字列として出力 (文字列化)
-            echo "::set-output name=${key}::$(echo $value | jq -c '.')"
+            echo "::set-output name=${key}::$(echo "$value_json" | jq -c '.')"
           else
-            echo "::set-output name=$key::$value"  # 通常のキーを設定
+            echo "::set-output name=$key::$value"
           fi
         done
       shell: bash
