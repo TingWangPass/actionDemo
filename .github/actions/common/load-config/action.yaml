@@ -30,59 +30,66 @@ runs:
         cat "${{ inputs.config_file }}"
       shell: bash
 
-    - name: Read YAML file and set outputs for each field
+    - name: Read YAML file and set outputs for each field (recursive)
       id: read_yaml
       run: |
         CONFIG_FILE="${{ inputs.config_file }}"
 
-        # keysをJSON形式で取得してjqで配列展開
-        keys=$(yq e -o=json 'keys' "$CONFIG_FILE")
+        # 入力ファイルを JSON に変換
+        json=$(yq e -o=json "$CONFIG_FILE")
 
-        for key in $(echo "$keys" | jq -r '.[]'); do
-          value=$(yq e ".$key" "$CONFIG_FILE")
-          
-          # JSONか判定するためにvalueをJSONで取得
-          value_json=$(yq e -o=json ".$key" "$CONFIG_FILE")
+        # 再帰的に key を展開して flat 出力
+        flatten() {
+          local json="$1"
+          local prefix="$2"
+          local keys
+          keys=$(echo "$json" | jq -r 'keys[]')
 
-          if [[ $(echo "$value_json" | jq 'type') == '"object"' ]]; then
-            subkeys=$(echo "$value_json" | jq -r 'keys | .[]')
-            for subkey in $subkeys; do
-              subvalue=$(echo "$value_json" | jq -r ".$subkey")
-              output_name="${key}_${subkey}"
-              echo "::set-output name=${output_name}::$subvalue"
-            done
-            echo "::set-output name=${key}::$(echo "$value_json" | jq -c '.')"
-          else
-            echo "::set-output name=$key::$value"
-          fi
-        done
+          for key in $keys; do
+            value=$(echo "$json" | jq -c ".\"$key\"")
+            value_type=$(echo "$value" | jq -r 'type')
+
+            # フルキー名（アンダースコア連結）
+            full_key="${prefix:+${prefix}_}${key}"
+
+            if [[ "$value_type" == "object" ]]; then
+              # 再帰呼び出し
+              flatten "$value" "$full_key"
+            else
+              # 出力ファイルに書き出し
+              echo "${full_key}=$(echo "$value" | jq -r '.')" >> "$GITHUB_OUTPUT"
+            fi
+          done
+        }
+
+        flatten "$json" ""
       shell: bash
+
 
     # - name: Read YAML file and set outputs for each field
     #   id: read_yaml
     #   run: |
     #     CONFIG_FILE="${{ inputs.config_file }}"
 
-    #     # config_file からすべてのトップレベルキーを取得
-    #     keys=$(yq e 'keys' $CONFIG_FILE)
+    #     # keysをJSON形式で取得してjqで配列展開
+    #     keys=$(yq e -o=json 'keys' "$CONFIG_FILE")
 
-    #     # 各キーをGitHub Actionsの出力として設定
     #     for key in $(echo "$keys" | jq -r '.[]'); do
-    #       value=$(yq e ".$key" $CONFIG_FILE)
+    #       value=$(yq e ".$key" "$CONFIG_FILE")
+          
+    #       # JSONか判定するためにvalueをJSONで取得
+    #       value_json=$(yq e -o=json ".$key" "$CONFIG_FILE")
 
-    #       # 対象キーがネストされている場合（例えば test1, test2）
-    #       if [[ $(echo "$value" | jq 'type') == '"object"' ]]; then
-    #         subkeys=$(echo "$value" | jq -r 'keys | .[]')
+    #       if [[ $(echo "$value_json" | jq 'type') == '"object"' ]]; then
+    #         subkeys=$(echo "$value_json" | jq -r 'keys | .[]')
     #         for subkey in $subkeys; do
-    #           subvalue=$(echo "$value" | jq -r ".$subkey")
-    #           # アンダースコア形式で出力
+    #           subvalue=$(echo "$value_json" | jq -r ".$subkey")
     #           output_name="${key}_${subkey}"
-    #           echo "::set-output name=${output_name}::$subvalue"  # 出力をアンダースコアで設定
+    #           echo "${output_name}=${subvalue}" >> $GITHUB_OUTPUT
     #         done
-    #         # test1 全体を文字列として出力 (文字列化)
-    #         echo "::set-output name=${key}::$(echo $value | jq -c '.')"
+    #         echo "${key}=$(echo "$value_json" | jq -c '.')" >> $GITHUB_OUTPUT
     #       else
-    #         echo "::set-output name=$key::$value"  # 通常のキーを設定
+    #         echo "${key}=${value}" >> $GITHUB_OUTPUT
     #       fi
     #     done
     #   shell: bash
