@@ -21,9 +21,6 @@ runs:
         yq --version
       shell: bash
 
-    # - name: Check yq version
-    #   run: yq --version
-
     - name: Show config_file content
       run: |
         echo "===== config_file (${{ inputs.config_file }}) content ====="
