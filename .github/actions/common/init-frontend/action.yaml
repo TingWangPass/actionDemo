@@ -29,33 +29,28 @@ runs:
         echo "pnpm version: ${{ inputs.pnpm }}"
         echo "jdk version: ${{ inputs.jdk }}"
         echo "gradle version: ${{ inputs.gradle }}"
-  
-    # - name: Install pnpm
-    #   uses: pnpm/action-setup@v2
-    #   with:
-    #     version: "{{ inputs.pnpm }}"
 
-    # - name: Install pnpm
-    #   uses: pnpm/action-setup@v4
-    #   with:
-    #     version: "{{ inputs.pnpm }}"
-    #     run_install: false
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: "${{ inputs.pnpm }}"
+        run_install: false
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: "{{ inputs.nodejs }}"
+        node-version: "${{ inputs.nodejs }}"
 
     - name: Set up Amazon Corretto JDK
       uses: actions/setup-java@v4
       with:
-        java-version: "{{ inputs.jdk }}"
+        java-version: "${{ inputs.jdk }}"
         distribution: 'corretto'
 
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: "{{ inputs.gradle }}"
+        gradle-version: "${{ inputs.gradle }}"
 
     - name: Get pnpm store path
       id: pnpm-cache
