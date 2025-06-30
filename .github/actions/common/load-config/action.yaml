@@ -15,14 +15,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Install dependencies
+    - name: Install yq
+      shell: bash
       run: |
-        sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+        sudo wget https://github.com/mikefarah/yq/releases/download/v4.45.4/yq_linux_amd64 -O /usr/local/bin/yq
         sudo chmod +x /usr/local/bin/yq
         yq --version
-      shell: bash
-
-
+      
     - name: Parse YAML test json
       id: read_yaml
       shell: bash
