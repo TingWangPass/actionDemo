@@ -10,6 +10,7 @@ inputs:
 outputs:
   github_output:
     description: 'All YAML content serialized as JSON string'
+    value: ${{ steps.read_yaml.outputs.github_output }}
 
 runs:
   using: 'composite'
@@ -23,7 +24,7 @@ runs:
 
 
     - name: Parse YAML test json
-      # id: read_yaml
+      id: read_yaml
       shell: bash
       run: |
         config_json=$(yq -o=json '.' "${{ inputs.config_file }}" | jq -c .)
