@@ -95,4 +95,5 @@ runs:
         echo "test1_user: ${{ steps.read_yaml.outputs.slack_teamDomain }}"  # アンダースコア形式で表示
         echo "test1_password: ${{ steps.read_yaml.outputs.slack_webhookUrl }}"  # アンダースコア形式で表示
         echo "test1: ${{ steps.read_yaml.outputs.parameter_store }}"  # test1 オブジェクト全体を表示
+        echo "test1: ${{ steps.read_yaml.outputs.secret_manager }}"  # test1 オブジェクト全体を表示
       shell: bash
