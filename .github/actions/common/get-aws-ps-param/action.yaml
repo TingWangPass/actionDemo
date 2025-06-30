@@ -18,7 +18,7 @@ runs:
     - name: Debug input
       shell: bash
       run: |
-        echo "Received parameter_store_json:"
+        echo "Received parameter_store_json:-------------------"
         echo '${{ inputs.parameter_store_json }}' | jq .
 
     - name: Fetch parameters from AWS SSM
@@ -27,7 +27,7 @@ runs:
       run: |
         json_output=""
         sep=""
-
+        PARAM_JSON='${{ inputs.parameter_store_json }}'
         while IFS='=' read -r key param_name; do
           echo "Fetching: key=$key from SSM name=$param_name"
           
@@ -36,10 +36,10 @@ runs:
           #   --with-decryption \
           #   --query 'Parameter.Value' \
           #   --output text)
-          secret_value = "testxxxx"
+          secret_value="testxxxx"
           json_output+="${sep}\"$key\":\"$secret_value\""
           sep=','
-        done < <(echo "${{ inputs.parameter_store_json }}" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
+        done < <(echo "$PARAM_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
 
         final_json="{${json_output}}"
         echo "github_output=$final_json" >> "$GITHUB_OUTPUT"
