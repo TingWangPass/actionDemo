@@ -85,13 +85,13 @@ runs:
     #     done
     #   shell: bash
 
-    # - name: Show Output
-    #   run: |
-    #     # GitHub Actionsの出力を表示
-    #     echo "Outputs:"
-    #     echo "jdk: ${{ steps.read_yaml.outputs.jdk }}"
-    #     echo "slack_teamDomain: ${{ steps.read_yaml.outputs.slack_teamDomain }}"  # アンダースコア形式で表示
-    #     echo "slack_webhookUrl: ${{ steps.read_yaml.outputs.slack_webhookUrl }}"  # アンダースコア形式で表示
-    #     echo "parameter_store: ${{ steps.read_yaml.outputs.parameter_store }}"  # test1 オブジェクト全体を表示
-    #     echo "secret_manager: ${{ steps.read_yaml.outputs.secret_manager }}"  # test1 オブジェクト全体を表示
-    #   shell: bash
+    - name: Show Output
+      run: |
+        # GitHub Actionsの出力を表示
+        echo "Outputs1111:"
+        echo "jdk: ${{ steps.read_yaml.outputs.jdk }}"
+        echo "slack_teamDomain: ${{ steps.read_yaml.outputs.slack_teamDomain }}"  # アンダースコア形式で表示
+        echo "slack_webhookUrl: ${{ steps.read_yaml.outputs.slack_webhookUrl }}"  # アンダースコア形式で表示
+        echo "parameter_store: ${{ steps.read_yaml.outputs.parameter_store }}"  # test1 オブジェクト全体を表示
+        echo "secret_manager: ${{ steps.read_yaml.outputs.secret_manager }}"  # test1 オブジェクト全体を表示
+      shell: bash
