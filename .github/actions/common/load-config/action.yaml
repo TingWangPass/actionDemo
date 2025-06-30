@@ -18,11 +18,12 @@ runs:
     - name: Install yq
       shell: bash
       run: |
-        sudo wget https://github.com/mikefarah/yq/releases/download/v4.45.4/yq_linux_amd64 -O /usr/local/bin/yq
+        YQ_VERSION="v4.45.4"
+        sudo wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O /usr/local/bin/yq
         sudo chmod +x /usr/local/bin/yq
         yq --version
       
-    - name: Parse YAML test json
+    - name: Parse YAML
       id: read_yaml
       shell: bash
       run: |
