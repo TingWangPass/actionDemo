@@ -1,0 +1,69 @@
+name: Setup Frontend Environment
+
+description: Install Node.js, pnpm, and JDK
+
+inputs:
+  nodejs:
+    description: 'Nodejs version'
+    required: true
+
+  jdk:
+    description: 'JDK version'
+    required: true
+
+  pnpm:
+    description: 'pnpm version'
+    required: true 
+
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.nodejs }}
+
+    # 缓存 Node.js 的依赖
+    - name: Cache Node.js dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.npm
+          ~/.cache
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    # 安装 pnpm
+    - name: Install pnpm
+      run: npm install -g pnpm@${{ inputs.pnpm }}
+
+    # 缓存 pnpm 的依赖
+    - name: Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-
+
+    # 安装 JDK
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ inputs.jdk }}
+        distribution: 'adoptopenjdk'
+
+    # 缓存 JDK 的依赖
+    - name: Cache Gradle wrapper
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+
