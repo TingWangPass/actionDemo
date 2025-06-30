@@ -1,42 +1,34 @@
-name: Get AWS AWS SSM values
+name: Get AWS SSM values
 
 description: Gets secrets from AWS Parameter Store
 
 inputs:
-  parameter_store_json:
+  input_json:
     description: 'JSON string of { "key": "parameterName" }'
     required: true
 
 outputs:
   github_output:
-    description: 'All secrets as a JSON string'
+    description: 'All secrets value as a JSON string'
     value: ${{ steps.fetch.outputs.github_output }}
 
 runs:
   using: 'composite'
   steps:
-    - name: Debug input
-      shell: bash
-      run: |
-        echo "Received parameter_store_json:-------------------"
-        echo '${{ inputs.parameter_store_json }}' | jq .
-
-    - name: Fetch parameters from AWS SSM
+    - name: Fetch value from AWS SSM
       id: fetch
       shell: bash
       run: |
         json_output=""
         sep=""
-        PARAM_JSON='${{ inputs.parameter_store_json }}'
-        while IFS='=' read -r key param_name; do
-          echo "Fetching: key=$key from SSM name=$param_name"
-          
+        PARAM_JSON='${{ inputs.input_json }}'
+        while IFS='=' read -r key param_name; do          
           # secret_value=$(aws ssm get-parameter \
           #   --name "$param_name" \
           #   --with-decryption \
           #   --query 'Parameter.Value' \
           #   --output text)
-          secret_value="testxxxx"
+          secret_value="test11111"
           json_output+="${sep}\"$key\":\"$secret_value\""
           sep=','
         done < <(echo "$PARAM_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
