@@ -22,14 +22,12 @@ runs:
       shell: bash
 
     - name: Parse YAML
-      id: read_yaml
+      # id: read_yaml
       shell: bash
       run: |
-        CONFIG_FILE="${{ inputs.config_file }}"
-        keys=$(yq e 'keys | .[]' "$CONFIG_FILE")
-        for key in $keys; do
-          val=$(yq e -o=json ".$key" "$CONFIG_FILE" | jq -c .)
-          echo "$key=$val" >> "$GITHUB_OUTPUT"
+        for key in $(yq e 'keys | .[]' "${{ inputs.config_file }}"); do
+          val=$(yq e -o=json ".$key" "${{ inputs.config_file }}" | jq -c .)
+          echo "$key=$val" >> $GITHUB_OUTPUT
         done
 
     # - name: Parse YAML top-level keys to outputs
@@ -87,13 +85,13 @@ runs:
     #     done
     #   shell: bash
 
-    - name: Show Output
-      run: |
-        # GitHub Actionsの出力を表示
-        echo "Outputs:"
-        echo "jdk: ${{ steps.read_yaml.outputs.jdk }}"
-        echo "slack_teamDomain: ${{ steps.read_yaml.outputs.slack_teamDomain }}"  # アンダースコア形式で表示
-        echo "slack_webhookUrl: ${{ steps.read_yaml.outputs.slack_webhookUrl }}"  # アンダースコア形式で表示
-        echo "parameter_store: ${{ steps.read_yaml.outputs.parameter_store }}"  # test1 オブジェクト全体を表示
-        echo "secret_manager: ${{ steps.read_yaml.outputs.secret_manager }}"  # test1 オブジェクト全体を表示
-      shell: bash
+    # - name: Show Output
+    #   run: |
+    #     # GitHub Actionsの出力を表示
+    #     echo "Outputs:"
+    #     echo "jdk: ${{ steps.read_yaml.outputs.jdk }}"
+    #     echo "slack_teamDomain: ${{ steps.read_yaml.outputs.slack_teamDomain }}"  # アンダースコア形式で表示
+    #     echo "slack_webhookUrl: ${{ steps.read_yaml.outputs.slack_webhookUrl }}"  # アンダースコア形式で表示
+    #     echo "parameter_store: ${{ steps.read_yaml.outputs.parameter_store }}"  # test1 オブジェクト全体を表示
+    #     echo "secret_manager: ${{ steps.read_yaml.outputs.secret_manager }}"  # test1 オブジェクト全体を表示
+    #   shell: bash
