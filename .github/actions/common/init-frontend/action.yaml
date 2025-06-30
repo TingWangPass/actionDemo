@@ -1,69 +1,56 @@
-name: Setup Frontend Environment
+name: Setup Node & pnpm with Cache
 
-description: Install Node.js, pnpm, and JDK
+description: >
+  Installs a specific version of Node.js and pnpm,
+  restores pnpm store cache, and runs pnpm install.
 
 inputs:
-  nodejs:
-    description: 'Nodejs version'
+  node_version:
+    description: 'Node.js version (e.g. 20.11.1)'
     required: true
 
-  jdk:
-    description: 'JDK version'
+  pnpm_version:
+    description: 'pnpm version (e.g. 10.12.4)'
     required: true
-
-  pnpm:
-    description: 'pnpm version'
-    required: true 
-
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
-    - name: Setup Node.js
+    - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ inputs.nodejs }}
+      node-version: '20.x'
+      cache: 'npm'
 
-    # 缓存 Node.js 的依赖
-    - name: Cache Node.js dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.npm
-          ~/.cache
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    # 安装 pnpm
     - name: Install pnpm
-      run: npm install -g pnpm@${{ inputs.pnpm }}
+      shell: bash
+      run: |
+        echo "Installing pnpm ${{ inputs.pnpm_version }}..."
+        npm install -g pnpm@${{ inputs.pnpm_version }}
+        pnpm -v
 
-    # 缓存 pnpm 的依赖
-    - name: Cache pnpm store
-      uses: actions/cache@v4
-      with:
-        path: ~/.pnpm-store
-        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-
-
-    # 安装 JDK
-    - name: Set up JDK
+    - name: Set up Amazon Corretto JDK 21
       uses: actions/setup-java@v3
       with:
-        java-version: ${{ inputs.jdk }}
-        distribution: 'adoptopenjdk'
+        java-version: '21'
+        distribution: 'corretto'
 
-    # 缓存 JDK 的依赖
-    - name: Cache Gradle wrapper
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v2
+      with:
+        gradle-version: '8.14.1'
+
+    - name: Get pnpm store path
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+    - name: Restore pnpm cache
       uses: actions/cache@v4
       with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-gradle-
-
+          ${{ runner.os }}-pnpm-store-
 
