@@ -28,11 +28,11 @@ runs:
     #   with:
     #     version: "{{ inputs.pnpm }}"
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: "{{ inputs.pnpm }}"
-        run_install: false
+    # - name: Install pnpm
+    #   uses: pnpm/action-setup@v4
+    #   with:
+    #     version: "{{ inputs.pnpm }}"
+    #     run_install: false
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
