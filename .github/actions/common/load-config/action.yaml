@@ -26,7 +26,7 @@ runs:
       # id: read_yaml
       shell: bash
       run: |
-        config_json=$(yq -o=json '.' "${{ inputs.config_file }}")
+        config_json=$(yq -o=json '.' "${{ inputs.config_file }}" | jq -c .)
         echo "github_output=$config_json" >> $GITHUB_OUTPUT
 
 
