@@ -1,23 +1,45 @@
-- name: Get AWS Secrets Manager values
-  id: get_secrets
-  inputs:
-    config_file:
-      description: 'Path to the YAML configuration file'
-      required: true
+name: Get AWS AWS SSM values
 
-  outputs:
-    github_output:
-      description: 'The output to be used by subsequent steps'
+description: Gets secrets from AWS Parameter Store
 
-  runs:
-    using: 'composite'
-    secrets_json='${{ steps.read_secrets.outputs.secrets }}'
+inputs:
+  parameter_store_json:
+    description: 'JSON string of { "key": "parameterName" }'
+    required: true
 
-    echo "$secrets_json" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key secret_id; do
-      secret_value=$(aws secretsmanager get-secret-value \
-        --secret-id "$secret_id" \
-        --query SecretString \
-        --output text)
+outputs:
+  github_output:
+    description: 'All secrets as a JSON string'
+    value: ${{ steps.fetch.outputs.github_output }}
 
-      echo "$key=$secret_value" >> "$GITHUB_OUTPUT"
-    done
+runs:
+  using: 'composite'
+  steps:
+    - name: Debug input
+      shell: bash
+      run: |
+        echo "Received parameter_store_json:"
+        echo '${{ inputs.parameter_store_json }}' | jq .
+
+    - name: Fetch parameters from AWS SSM
+      id: fetch
+      shell: bash
+      run: |
+        json_output=""
+        sep=""
+
+        while IFS='=' read -r key param_name; do
+          echo "Fetching: key=$key from SSM name=$param_name"
+          
+          # secret_value=$(aws ssm get-parameter \
+          #   --name "$param_name" \
+          #   --with-decryption \
+          #   --query 'Parameter.Value' \
+          #   --output text)
+          secret_value = "testxxxx"
+          json_output+="${sep}\"$key\":\"$secret_value\""
+          sep=','
+        done < <(echo "${{ inputs.parameter_store_json }}" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
+
+        final_json="{${json_output}}"
+        echo "github_output=$final_json" >> "$GITHUB_OUTPUT"
