@@ -9,7 +9,7 @@ inputs:
 
 outputs:
   github_output:
-    description: 'The output to be used by subsequent steps'
+    description: 'All YAML content serialized as JSON string'
 
 runs:
   using: 'composite'
@@ -21,14 +21,14 @@ runs:
         yq --version
       shell: bash
 
-    - name: Parse YAML
+
+    - name: Parse YAML test json
       # id: read_yaml
       shell: bash
       run: |
-        for key in $(yq e 'keys | .[]' "${{ inputs.config_file }}"); do
-          val=$(yq e -o=json ".$key" "${{ inputs.config_file }}" | jq -c .)
-          echo "$key=$val" >> "$GITHUB_OUTPUT"
-        done
+        config_json=$(yq -o=json '.' "${{ inputs.config_file }}")
+        echo "github_output=$config_json" >> $GITHUB_OUTPUT
+
 
     # - name: Show Output
     #   run: |
