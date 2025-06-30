@@ -22,7 +22,7 @@ runs:
       shell: bash
 
     - name: Parse YAML
-      # id: read_yaml
+      id: read_yaml
       shell: bash
       run: |
         for key in $(yq e 'keys | .[]' "${{ inputs.config_file }}"); do
