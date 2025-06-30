@@ -28,8 +28,8 @@ runs:
         CONFIG_FILE="${{ inputs.config_file }}"
         keys=$(yq e 'keys | .[]' "$CONFIG_FILE")
         for key in $keys; do
-          val=$(yq e -o=json ".$key" "$CONFIG_FILE")
-          echo "$key=$val" >> $GITHUB_OUTPUT
+          val=$(yq e -o=json ".$key" "$CONFIG_FILE" | jq -c .)
+          echo "$key=$val" >> "$GITHUB_OUTPUT"
         done
 
     # - name: Parse YAML top-level keys to outputs
