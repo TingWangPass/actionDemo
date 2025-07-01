@@ -22,14 +22,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Print tools version input
-      shell: bash
-      run: |
-        echo "Node.js version: ${{ inputs.nodejs }}"
-        echo "pnpm version: ${{ inputs.pnpm }}"
-        echo "jdk version: ${{ inputs.jdk }}"
-        echo "gradle version: ${{ inputs.gradle }}"
-
     - name: Install pnpm
       uses: pnpm/action-setup@v4
       with:
