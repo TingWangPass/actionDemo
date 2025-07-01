@@ -66,3 +66,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
 
+    - name: Run pnpm install with frozen-lockfile
+      shell: bash
+      run: |
+        pnpm run ci
